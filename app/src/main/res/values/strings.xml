@@ -1,0 +1,7 @@
+<resources>
+    <string name="app_name">Growbox</string>
+    <string name="temperatura">Temperatura</string>
+    <string name="wilgotno">Wilgotność</string>
+    <string name="roz_cz_bluetooth">Rozłącz Bluetooth</string>
+    <string name="po_cz_bluetooth">Połącz Bluetooth</string>
+</resources>
