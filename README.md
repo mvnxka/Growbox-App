@@ -3,7 +3,7 @@ Dodawianie własnego telefonu do Android Studio, jeśli nie działa parowanie be
   2) Shift + prawy przycisk myszy
   3) Otwórz tutaj okno programu PowerShell
   4) Wprowadź następujące komendy:
-     -   cd C:\Users\Acer\AppData\Local\Android\Sdk\platform-tools
+     -   cd C:\Users\username\AppData\Local\Android\Sdk\platform-tools
      -   ls
      -   ./adb pair (adres ip z portem, który wyświetla się w "sparuj urządzenie za pomocą kodu")
 
