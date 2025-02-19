@@ -1,19 +1,23 @@
 package com.example.growbox
 
 import android.Manifest
+import android.annotation.SuppressLint
 import android.bluetooth.BluetoothAdapter
 import android.bluetooth.BluetoothDevice
 import android.bluetooth.BluetoothSocket
 import android.content.Context
 import android.content.pm.PackageManager
 import androidx.core.app.ActivityCompat
+import kotlinx.coroutines.*
 import java.io.InputStream
 import java.util.*
 
 class BluetoothService(private val context: Context, private val onDataReceived: (String) -> Unit) {
     private val bluetoothAdapter: BluetoothAdapter? = BluetoothAdapter.getDefaultAdapter()
     private var socket: BluetoothSocket? = null
+    private var receiveJob: Job? = null
 
+    @SuppressLint("MissingPermission")
     fun connect(deviceAddress: String) {
         val device: BluetoothDevice? = bluetoothAdapter?.getRemoteDevice(deviceAddress)
         device?.let {
@@ -21,9 +25,9 @@ class BluetoothService(private val context: Context, private val onDataReceived:
                 return
             }
             try {
-                socket = it.createRfcommSocketToServiceRecord(UUID.fromString("00001101-0000-1000-8000-00805F9B34FB"))
+                socket = it.createRfcommSocketToServiceRecord(UUID.fromString("0000ffe0-0000-1000-8000-00805f9b34fb")) // BLE UUID
                 socket?.connect()
-                listenForData()
+                startListening()
             } catch (e: Exception) {
                 e.printStackTrace()
                 socket = null
@@ -31,23 +35,29 @@ class BluetoothService(private val context: Context, private val onDataReceived:
         }
     }
 
-    private fun listenForData() {
-        socket?.inputStream?.let { stream ->
-            val buffer = ByteArray(1024)
-            val inputStream: InputStream = stream
-            val reader = inputStream.bufferedReader()
-
-            while (true) {
+    private fun startListening() {
+        receiveJob = CoroutineScope(Dispatchers.IO).launch {
+            socket?.inputStream?.let { stream ->
+                val reader = stream.bufferedReader()
                 try {
-                    val data = reader.readLine()
-                    if (data != null) {
-                        onDataReceived(data.trim())
+                    while (isActive) {
+                        val data = reader.readLine()
+                        if (!data.isNullOrEmpty()) {
+                            withContext(Dispatchers.Main) {
+                                onDataReceived(data.trim()) // Przekazanie danych do UI
+                            }
+                        }
                     }
                 } catch (e: Exception) {
                     e.printStackTrace()
-                    break
                 }
             }
         }
+    }
+
+    fun disconnect() {
+        receiveJob?.cancel()
+        socket?.close()
+        socket = null
     }
 }
